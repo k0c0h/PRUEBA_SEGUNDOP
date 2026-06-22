@@ -1,7 +1,6 @@
 // TODO (Estudiante): Configurar e inicializar Sentry Node SDK para la observabilidad ANTES de importar Express o cualquier otra librería.
 // Pistas:
 const Sentry = require('@sentry/node');
-
 require('dotenv').config();
 require('./src/instrument');
 const express = require('express');

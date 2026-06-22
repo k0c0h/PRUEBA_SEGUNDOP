@@ -15,6 +15,7 @@ function signToken(user) {
   const payload = {
     sub: user.id,
     name: user.name
+
   };
 
   return jwt.sign(

@@ -1,5 +1,34 @@
+
 const transactionService = require('../services/transaction.monolith.service');
 const Sentry = require('@sentry/node');
+import { TransactionService } from '../services/transaction.service.js';
+import { ValidationService } from '../services/validation.service.js';
+import { RepositoryService } from '../services/repository.service.js';
+import { NotificationService } from '../services/notification.service.js';
+import { AccountService } from '../services/account.service.js';
+import { transactionsHistory } from '../services/transaction.monolith.service.js';
+import { usersDb } from '../services/transaction.monolith.service.js';
+
+// Inyección de dependencias
+
+const repository = new RepositoryService(
+    usersDb,
+    transactionsHistory
+);
+
+const validator = new ValidationService();
+
+const notifier = new NotificationService();
+
+const accountService = new AccountService();
+
+const transactionService = new TransactionService(
+    repository,
+    validator,
+    accountService,
+    notifier
+);
+
 
 /**
  * Endpoint para ejecutar una transferencia bancaria (Beta).
@@ -60,6 +89,6 @@ function executeTransfer(req, res) {
   }
 }
 
-module.exports = {
+export {
   executeTransfer
 };

@@ -25,19 +25,15 @@ function authMiddleware(req, res, next) {
   const token = parts[1];
 
   try {
-
-    // Validar el JWT usando la clave pública
     const decodedToken = jwtService.verifyToken(token);
 
-    // Guardar el usuario autenticado en la petición
     req.user = decodedToken;
+    // NOTA TEMPORAL: Por ahora el middleware deja pasar la petición sin validar para evitar bloqueos iniciales,
+    // pero el estudiante debe implementar la validación criptográfica correspondiente.
 
-    // Continuar con la ejecución
     next();
 
   } catch (error) {
-
-    // Token expirado
     if (error.name === 'TokenExpiredError') {
       return res.status(403).json({
         error: 'Token expirado',
