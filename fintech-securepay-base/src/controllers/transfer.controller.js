@@ -1,13 +1,20 @@
 const transactionService = require('../services/transaction.monolith.service');
+const Sentry = require('@sentry/node');
 
 /**
  * Endpoint para ejecutar una transferencia bancaria (Beta).
  * POST /v1/transfer-beta/execute
- * 
- * Espera un cuerpo JSON con: { fromAccountId, toAccountId, amount }
  */
 function executeTransfer(req, res) {
   try {
+
+    // Simulación de fallo operacional
+    if (req.body.simulateFailure === true) {
+      throw new Error(
+        'Conexión interrumpida con el Clúster de Datos SecurePay'
+      );
+    }
+
     const { fromAccountId, toAccountId, amount } = req.body;
 
     if (!fromAccountId || !toAccountId || amount === undefined) {
@@ -17,10 +24,35 @@ function executeTransfer(req, res) {
       });
     }
 
-    const result = transactionService.executeTransfer(fromAccountId, toAccountId, Number(amount));
+    const result = transactionService.executeTransfer(
+      fromAccountId,
+      toAccountId,
+      Number(amount)
+    );
+
     return res.status(200).json(result);
+
   } catch (error) {
-    // Si la validación o deducción falla en el monolito, se maneja como error bad request.
+
+    // Error operacional -> reportar a Sentry
+    if (
+      error.message ===
+      'Conexión interrumpida con el Clúster de Datos SecurePay'
+    ) {
+
+      if (req.user?.sub) {
+        Sentry.setTag('userId', req.user.sub);
+      }
+
+      Sentry.captureException(error);
+
+      return res.status(500).json({
+        error: 'Error operacional',
+        message: error.message
+      });
+    }
+
+    // Error lógico -> NO reportar a Sentry
     return res.status(400).json({
       error: 'Error en la transacción',
       message: error.message
